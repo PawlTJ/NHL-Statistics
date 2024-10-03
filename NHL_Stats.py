@@ -136,38 +136,41 @@ def Top_SOG():
 
 def Hexagon_Graph():
     player_select = player_var.get()
-    players_fy_stats = fy[fy['Player'] == player_select].filter(['G','A','PTS','+/-','PIM','PP','SOG'], axis=1)
-    players_fy_name = fy[fy['Player'] == player_select].filter(['Player', 'Pos','Team'], axis=1)
-    full_fy_stats = fy.filter(['G','A','PTS','+/-','PIM','PP','SOG'], axis=1)
+    if player_select in fy['Player'].values:
+        players_fy_stats = fy[fy['Player'] == player_select].filter(['G','A','PTS','+/-','PIM','PP','SOG'], axis=1)
+        players_fy_name = fy[fy['Player'] == player_select].filter(['Player', 'Pos','Team'], axis=1)
+        full_fy_stats = fy.filter(['G','A','PTS','+/-','PIM','PP','SOG'], axis=1)
 
-    max_values = full_fy_stats.max()
-    percent_stats = players_fy_stats / max_values
+        max_values = full_fy_stats.max()
+        percent_stats = players_fy_stats / max_values
 
-    categories = ['G', 'A', 'PTS', '+/-', 'PIM', 'PP', 'SOG']
-    num_vars = len(categories)
-    
-    points = percent_stats.iloc[0].to_list()
-    actuals = players_fy_stats.iloc[0].to_list()
-    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+        categories = ['G', 'A', 'PTS', '+/-', 'PIM', 'PP', 'SOG']
+        num_vars = len(categories)
+        
+        points = percent_stats.iloc[0].to_list()
+        actuals = players_fy_stats.iloc[0].to_list()
+        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
 
-    points += points[:1]
-    angles += angles[:1]
-    actuals += actuals[:1]
+        points += points[:1]
+        angles += angles[:1]
+        actuals += actuals[:1]
 
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+        fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
 
-    ax.fill(angles, points, color='lightblue', alpha=0.25)
-    ax.plot(angles, points, color='blue', linewidth=2)
+        ax.fill(angles, points, color='lightblue', alpha=0.25)
+        ax.plot(angles, points, color='blue', linewidth=2)
 
-    plt.title(f'{players_fy_name.iloc[0]["Team"]} - {players_fy_name.iloc[0]["Player"]} - {players_fy_name.iloc[0]["Pos"]}')
-    ax.set_yticklabels([])
-    ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories)
+        plt.title(f'{players_fy_name.iloc[0]["Team"]} - {players_fy_name.iloc[0]["Player"]} - {players_fy_name.iloc[0]["Pos"]}')
+        ax.set_yticklabels([])
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories)
 
-    for j in range(num_vars):
-        ax.text(angles[j], points[j] - 0.1, str(actuals[j]), horizontalalignment='center', size=9, color='black', weight='semibold')
+        for j in range(num_vars):
+            ax.text(angles[j], points[j] - 0.1, str(actuals[j]), horizontalalignment='center', size=9, color='black', weight='semibold')
 
-    plt.show()
+        plt.show()
+    else:
+        print(f"Player '{player_select}' not found!")
         
 def update_combobox(*args):
     typed = player_var.get()
@@ -176,6 +179,30 @@ def update_combobox(*args):
     else:
         filtered_players = [player for player in players if typed.lower() in player.lower()]
         player_dropdown['values'] = filtered_players
+
+def super_rank():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+
+    sorted_data = new_fy.sort_values(by=['G'], ascending=False).reset_index(drop=True)
+    sorted_data['G R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['A'], ascending=False).reset_index(drop=True)
+    sorted_data['A R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['PTS'], ascending=False).reset_index(drop=True)
+    sorted_data['PTS R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['+/-'], ascending=False).reset_index(drop=True)
+    sorted_data['+/- R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['PIM'], ascending=False).reset_index(drop=True)
+    sorted_data['PIM R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['PP'], ascending=False).reset_index(drop=True)
+    sorted_data['PP R'] = sorted_data.index + 1
+    sorted_data = sorted_data.sort_values(by=['SOG'], ascending=False).reset_index(drop=True)
+    sorted_data['SOG R'] = sorted_data.index + 1
+    sorted_data['Power R'] = (sorted_data['G R'] + sorted_data['A R'] + sorted_data['PTS R'] + sorted_data['+/- R'] + sorted_data['PIM R'] + sorted_data['PP R'] + sorted_data['SOG R']) / 7
+
+    sorted_data = sorted_data.sort_values(by=['Power R'], ascending=True).reset_index(drop=True)
+    
+    print(sorted_data.head(15))
 
 # Create tkinker window
 root = tk.Tk()
@@ -215,7 +242,7 @@ plot_button_10.pack(pady=10)
 
 plot_button_8 = tk.Button(root, text="Remove Player", command=remove_player)
 plot_button_8.pack(pady=30)
-plot_button_9 = tk.Button(root, text="Add Player", command=Hexagon_Graph)
+plot_button_9 = tk.Button(root, text="Super Rank", command=super_rank)
 plot_button_9.pack(pady=0)
 
 player_var.trace('w', update_combobox)
