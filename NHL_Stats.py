@@ -1,6 +1,7 @@
 import pandas as pd  
 import numpy as np               
 import matplotlib.pyplot as plt     
+import os
 import tkinter as tk                
 from tkinter import ttk
 
@@ -10,6 +11,8 @@ ts = pd.read_csv('Team_stats.csv')
 tl = pd.read_csv('Team_List.csv')
 rsr = pd.read_csv('Regular_Season_Results.csv')
 
+remove_player_file = 'Removed_Players.csv'
+
 LJ = ss.filter(['Player','Tm','Team','Pos','GP','G','A','PTS','+/-','PIM','PP','SOG'], axis=1)
 RJ = tl.filter(['Tm','Team'], axis=1)
 
@@ -18,6 +21,12 @@ fy['Team'] = fy['Team'].fillna('').astype(str)
 teams = sorted(fy['Team'].unique())
 players = sorted(fy['Player'].unique())
 poss = sorted(fy['Pos'].unique())
+
+if os.path.exists(remove_player_file):
+    removed_players_df = pd.read_csv(remove_player_file, header=None, names=['player_removed'])
+    removed_players = removed_players_df['player_removed'].tolist()
+    
+    fy = fy[~fy['Player'].isin(removed_players)]
 
 def Top_Players_All():
     fy50 = fy.head(50)
@@ -30,7 +39,20 @@ def Top_Players_All():
     plt.show()
 
 def remove_player():
-    return
+    player_to_remove = player_var.get()
+    global fy
+    if player_to_remove in fy['Player'].values:
+        fy = fy[fy['Player'] != player_to_remove]
+        removed_player_df = pd.DataFrame({'player_removed': [player_to_remove]})
+        removed_player_df.to_csv(remove_player_file, mode='a', header=False, index=False)
+        print()
+        print(f"Player '{player_to_remove}' is now removed!")
+        print()
+
+    else:
+        print()
+        print(f"Player '{player_to_remove}' not found!")
+        print()
 
 def Team_Fillter(df):
     team_select = team_var.get()
@@ -123,32 +145,37 @@ def Hexagon_Graph():
 
     categories = ['G', 'A', 'PTS', '+/-', 'PIM', 'PP', 'SOG']
     num_vars = len(categories)
-    num_players = len(players_fy_name)
+    
+    points = percent_stats.iloc[0].to_list()
+    actuals = players_fy_stats.iloc[0].to_list()
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
 
-    for i in range(num_players):
-        points = percent_stats.iloc[i].to_list()
-        actuals = players_fy_stats.iloc[i].to_list()
-        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    points += points[:1]
+    angles += angles[:1]
+    actuals += actuals[:1]
 
-        points += points[:1]
-        angles += angles[:1]
-        actuals += actuals[:1]
+    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
 
-        fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+    ax.fill(angles, points, color='lightblue', alpha=0.25)
+    ax.plot(angles, points, color='blue', linewidth=2)
 
-        ax.fill(angles, points, color='lightblue', alpha=0.25)
-        ax.plot(angles, points, color='blue', linewidth=2)
+    plt.title(f'{players_fy_name.iloc[0]["Team"]} - {players_fy_name.iloc[0]["Player"]} - {players_fy_name.iloc[0]["Pos"]}')
+    ax.set_yticklabels([])
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories)
 
-        plt.title(f'{players_fy_name.iloc[i]["Team"]} - {players_fy_name.iloc[i]["Player"]} - {players_fy_name.iloc[i]["Pos"]}')
-        ax.set_yticklabels([])
-        ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories)
+    for j in range(num_vars):
+        ax.text(angles[j], points[j] - 0.1, str(actuals[j]), horizontalalignment='center', size=9, color='black', weight='semibold')
 
-        for j in range(num_vars):
-            ax.text(angles[j], points[j] - 0.1, str(actuals[j]), horizontalalignment='center', size=9, color='black', weight='semibold')
-
-        plt.show()
+    plt.show()
         
+def update_combobox(*args):
+    typed = player_var.get()
+    if typed == "":
+        player_dropdown['values'] = players
+    else:
+        filtered_players = [player for player in players if typed.lower() in player.lower()]
+        player_dropdown['values'] = filtered_players
 
 # Create tkinker window
 root = tk.Tk()
@@ -186,10 +213,11 @@ plot_button_9.pack(pady=10)
 plot_button_10 = tk.Button(root, text="Top SOG", command=Top_SOG)
 plot_button_10.pack(pady=10)
 
-plot_button_8 = tk.Button(root, text="Remove Player", command=Hexagon_Graph)
+plot_button_8 = tk.Button(root, text="Remove Player", command=remove_player)
 plot_button_8.pack(pady=30)
 plot_button_9 = tk.Button(root, text="Add Player", command=Hexagon_Graph)
 plot_button_9.pack(pady=0)
 
+player_var.trace('w', update_combobox)
 
 root.mainloop()
