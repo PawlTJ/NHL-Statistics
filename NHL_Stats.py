@@ -17,6 +17,7 @@ fy = pd.merge(LJ, RJ, on ='Tm', how ='left')
 fy['Team'] = fy['Team'].fillna('').astype(str)
 teams = sorted(fy['Team'].unique())
 players = sorted(fy['Player'].unique())
+poss = sorted(fy['Pos'].unique())
 
 def Top_Players_All():
     fy50 = fy.head(50)
@@ -26,12 +27,87 @@ def Top_Players_All():
     plt.xlabel('Goals')
     plt.ylabel('Assets')
     plt.grid(True)
-
     plt.show()
 
-def Top_Players_Select():
+def remove_player():
+    return
+
+def Team_Fillter(df):
     team_select = team_var.get()
-    print(fy.loc[fy['Team'] == team_select])
+    if(team_select):
+        df_by_team = df.loc[df['Team'] == team_select]
+    else:
+        df_by_team = df
+    return df_by_team
+
+def Pos_Fillter(df):
+    pos_select = pos_var.get()
+    if(pos_select):
+        df_by_team = df.loc[df['Pos'] == pos_select]
+    else:
+        df_by_team = df
+    return df_by_team
+
+def Top_Goals():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['G'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_Assists():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['A'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_Points():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['PTS'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_PlusMinu():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['+/-'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_PIM():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['PIM'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_PP():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['PP'], ascending=False)
+    print()
+    print(print_data.head(15))
+    print()
+    print()
+
+def Top_SOG():
+    team_fy = Team_Fillter(fy)
+    new_fy = Pos_Fillter(team_fy)
+    print_data = new_fy.sort_values(by=['SOG'], ascending=False)
+    print()
+    print(print_data.head(15))
     print()
     print()
 
@@ -80,46 +156,40 @@ root.title("NHL Stats")
 root.geometry("250x700")
 
 plot_button_1 = tk.Button(root, text="Plot Top 50 Players", command=Top_Players_All)
-plot_button_1.pack(pady=20)
+plot_button_1.pack(pady=10)
 
 team_var = tk.StringVar()
 team_dropdown = ttk.Combobox(root, textvariable=team_var, values=teams)
 team_dropdown.pack(pady=5)
-plot_button_2 = tk.Button(root, text="Team Stats", command=Top_Players_Select)
-plot_button_2.pack(pady=20)
+pos_var = tk.StringVar()
+pos_dropdown = ttk.Combobox(root, textvariable=pos_var, values=poss)
+pos_dropdown.pack(pady=5)
 
 player_var = tk.StringVar()
 player_dropdown = ttk.Combobox(root, textvariable=player_var, values=players)
 player_dropdown.pack(pady=5)
 plot_button_3 = tk.Button(root, text="Player Graph", command=Hexagon_Graph)
-plot_button_3.pack(pady=20)
+plot_button_3.pack(pady=10)
 
-
-plot_button_4 = tk.Button(root, text="Top Goals", command=Hexagon_Graph)
-plot_button_4.pack(pady=20)
-
-plot_button_5 = tk.Button(root, text="Top Assects", command=Hexagon_Graph)
-plot_button_5.pack(pady=20)
-
-plot_button_6 = tk.Button(root, text="Top +/-", command=Hexagon_Graph)
-plot_button_6.pack(pady=20)
-
-plot_button_7 = tk.Button(root, text=" Top PIM", command=Hexagon_Graph)
-plot_button_7.pack(pady=20)
-
-plot_button_8 = tk.Button(root, text="Top PP", command=Hexagon_Graph)
-plot_button_8.pack(pady=20)
-
-plot_button_9 = tk.Button(root, text="Top SOG", command=Hexagon_Graph)
-plot_button_9.pack(pady=20)
-
-
+plot_button_4 = tk.Button(root, text="Top Goals", command=Top_Goals)
+plot_button_4.pack(pady=10)
+plot_button_5 = tk.Button(root, text="Top Assists", command=Top_Assists)
+plot_button_5.pack(pady=10)
+plot_button_6 = tk.Button(root, text="Top Points", command=Top_Points)
+plot_button_6.pack(pady=10)
+plot_button_7 = tk.Button(root, text="Top +/-", command=Top_PlusMinu)
+plot_button_7.pack(pady=10)
+plot_button_8 = tk.Button(root, text=" Top PIM", command=Top_PIM)
+plot_button_8.pack(pady=10)
+plot_button_9 = tk.Button(root, text="Top PP", command=Top_PP)
+plot_button_9.pack(pady=10)
+plot_button_10 = tk.Button(root, text="Top SOG", command=Top_SOG)
+plot_button_10.pack(pady=10)
 
 plot_button_8 = tk.Button(root, text="Remove Player", command=Hexagon_Graph)
-plot_button_8.pack(pady=20)
-
+plot_button_8.pack(pady=30)
 plot_button_9 = tk.Button(root, text="Add Player", command=Hexagon_Graph)
-plot_button_9.pack(pady=20)
+plot_button_9.pack(pady=0)
 
 
 root.mainloop()
