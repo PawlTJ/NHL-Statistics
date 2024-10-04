@@ -202,7 +202,9 @@ def super_rank():
 
     sorted_data = sorted_data.sort_values(by=['Power R'], ascending=True).reset_index(drop=True)
     
+    print()
     print(sorted_data.head(15))
+    print()
 
 # Create tkinker window
 root = tk.Tk()
